@@ -98,7 +98,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "🔒 PDF is locked.\n\n"
                 "Pehle dono channels join karein, phir neeche "
-                ""I Joined ✅" button dabayein.",
+                '"I Joined ✅" button dabayein.',
                 reply_markup=join_keyboard(code),
             )
     else:
@@ -133,7 +133,7 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await query.message.reply_text(
             "❌ Abhi dono channels join nahi hue hain.\n"
-            "Dono ko join karke phir "I Joined ✅" dabayein.",
+            'Dono ko join karke phir "I Joined ✅" dabayein.',
             reply_markup=join_keyboard(code),
         )
 
