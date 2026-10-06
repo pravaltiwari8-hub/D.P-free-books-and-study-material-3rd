@@ -77,8 +77,8 @@ def join_keyboard(code):
     return InlineKeyboardMarkup(buttons)
 
 
-async def send_pdf(update, file_id, name):
-    await update.message.reply_document(document=file_id, caption=name)
+async def send_file(message, file_id, name):
+    await message.reply_document(document=file_id, caption=name)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -97,16 +97,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if joined:
             file_id, name = result
-            await send_pdf(update, file_id, name)
+            await send_file(update.message, file_id, name)
         else:
             await update.message.reply_text(
-                "🔒 PDF is locked.\n\n"
+                "🔒 File is locked.\n\n"
                 "Pehle dono channels join karein, phir neeche "
                 '"I Joined ✅" button dabayein.',
                 reply_markup=join_keyboard(code),
             )
     else:
-        await update.message.reply_text("Welcome! Send me your PDF code.")
+        await update.message.reply_text("Welcome! Send me your file.")
 
 
 async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,7 +130,7 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if joined:
         file_id, name = result
-        await query.message.reply_document(document=file_id, caption=name)
+        await send_file(query.message, file_id, name)
     else:
         await query.message.reply_text(
             "❌ Abhi dono channels join nahi hue hain.\n"
@@ -139,19 +139,30 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def save_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def save_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
 
-    doc = update.message.document
-    if not doc:
+    message = update.message
+    if not message:
+        return
+
+    file_id = None
+    name = None
+
+    if message.document:
+        file_id = message.document.file_id
+        name = message.document.file_name or "File"
+    elif message.video:
+        file_id = message.video.file_id
+        name = message.video.file_name or "Video"
+    else:
         return
 
     code = secrets.token_urlsafe(6)
-    name = doc.file_name or "PDF"
     db.execute(
         "INSERT INTO files (code, file_id, name) VALUES (?, ?, ?)",
-        (code, doc.file_id, name),
+        (code, file_id, name),
     )
     db.commit()
 
@@ -159,14 +170,14 @@ async def save_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         short_link = make_vplink(direct_link)
-        await update.message.reply_text(
-            f"PDF saved successfully!\n\n"
+        await message.reply_text(
+            f"File saved successfully!\n\n"
             f"VPLINK:\n{short_link}\n\n"
             f"Direct link:\n{direct_link}"
         )
     except Exception as e:
-        await update.message.reply_text(
-            f"PDF saved successfully!\n\n"
+        await message.reply_text(
+            f"File saved successfully!\n\n"
             f"VPLINK error: {e}\n\n"
             f"Direct link:\n{direct_link}"
         )
@@ -179,7 +190,12 @@ def main():
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(check_join, pattern=r"^check:"))
-    app.add_handler(MessageHandler(filters.Document.PDF, save_pdf))
+    app.add_handler(
+        MessageHandler(
+            filters.Document.ALL | filters.VIDEO,
+            save_file,
+        )
+    )
 
     print("Bot is running...")
     app.run_polling()
