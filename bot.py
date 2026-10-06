@@ -59,6 +59,13 @@ async def is_member(bot, user_id, channel_username):
         return False
 
 
+async def all_channels_joined(bot, user_id):
+    for _, channel_username, _ in FORCE_CHANNELS:
+        if not await is_member(bot, user_id, channel_username):
+            return False
+    return True
+
+
 def join_keyboard(code):
     buttons = [
         [InlineKeyboardButton(name, url=url)]
@@ -86,10 +93,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
         user_id = update.effective_user.id
-        joined = all(
-            await is_member(context.bot, user_id, channel_username)
-            for _, channel_username, _ in FORCE_CHANNELS
-        )
+        joined = await all_channels_joined(context.bot, user_id)
 
         if joined:
             file_id, name = result
@@ -122,10 +126,7 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = query.from_user.id
-    joined = all(
-        await is_member(context.bot, user_id, channel_username)
-        for _, channel_username, _ in FORCE_CHANNELS
-    )
+    joined = await all_channels_joined(context.bot, user_id)
 
     if joined:
         file_id, name = result
