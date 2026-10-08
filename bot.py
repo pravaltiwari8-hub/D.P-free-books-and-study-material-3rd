@@ -2,6 +2,7 @@ import os
 import sqlite3
 import secrets
 import requests
+from urllib.parse import quote
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 from telegram.ext import (
@@ -21,6 +22,9 @@ FORCE_CHANNELS = [
     ("Freee Movies Club", "@Freee_Movies_Club", "https://t.me/Freee_Movies_Club"),
     ("Free Books PDF Hub", "@Free_books_pdf_hub", "https://t.me/Free_books_pdf_hub"),
 ]
+
+# GitHub Pages URL for the FILEHUB landing page.
+FILEHUB_URL = "https://pravaltiwari8-hub.github.io/D.P-free-books-and-study-material-3rd/"
 
 DB_PATH = "/data/files.db" if os.path.isdir("/data") else "files.db"
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -170,8 +174,11 @@ async def save_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         short_link = make_vplink(direct_link)
+        filehub_link = FILEHUB_URL + "?url=" + quote(short_link, safe="")
+
         await message.reply_text(
             f"File saved successfully!\n\n"
+            f"FILEHUB:\n{filehub_link}\n\n"
             f"VPLINK:\n{short_link}\n\n"
             f"Direct link:\n{direct_link}"
         )
