@@ -24,7 +24,7 @@ FORCE_CHANNELS = [
 ]
 
 # GitHub Pages URL for the FILEHUB landing page.
-FILEHUB_URL = "https://pravaltiwari8-hub.github.io/D.P-free-books-and-study-material-3rd/"
+FILEHUB_URL = "https://pravaltiwari8-hub.github.io/dpbooks/"
 
 DB_PATH = "/data/files.db" if os.path.isdir("/data") else "files.db"
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
